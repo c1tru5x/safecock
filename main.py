@@ -28,7 +28,8 @@ m_iIDEntIndex = client_data["C_CSPlayerPawnBase"]["data"]["m_iIDEntIndex"]["valu
 m_bIsDefusing = client_data["C_CSPlayerPawnBase"]["data"]["m_bIsDefusing"]["value"]
 m_bHasDefuser = client_data["CCSPlayer_ItemServices"]["data"]["m_bHasDefuser"]["value"]
 m_iHealth = client_data["C_BaseEntity"]["data"]["m_iHealth"]["value"]
-
+dwPlantedC4 = offs_data["client_dll"]["data"]["dwPlantedC4"]["value"]
+m_nBombSite = client_data["C_PlantedC4"]["data"]["m_nBombSite"]["value"]
 
 #### start code
 pm = pymem.Pymem("cs2.exe")
@@ -65,6 +66,8 @@ def trigger():
                     time.sleep(random.uniform(0.01,0.03))
                     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
 def checkDefuse():
+    # check if bomb is planted
+    planted = pm.read_bool(client + dwPlantedC4 - 0x8)
     # entityList
     for i in range(32):
         entity = pm.read_ulonglong(client + dwEntityList)
@@ -87,12 +90,13 @@ def checkDefuse():
         hasKit = pm.read_bool(entity_pawn + m_bHasDefuser)
         player_team = pm.read_int(entity_pawn + m_iTeamNum)
         my_team = pm.read_int(player + m_iTeamNum)
-        #check only for enemy
-        if(player_team != my_team):
-            if(isDefusing and hasKit):
-                beep(400, 70)
-            if(isDefusing and hasKit == False):
-                beep(250,100)
+        if planted:
+            #check only for enemy and only if planted
+            if(player_team != my_team):
+                if(isDefusing and hasKit):
+                    beep(350, 150)
+                if(isDefusing and hasKit == False):
+                    beep(250,300)
 def healthCheck():
     time.sleep(0.2)
     # entityList
