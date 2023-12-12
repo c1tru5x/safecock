@@ -55,6 +55,7 @@ def trigger():
         entity_pawn = pm.read_ulonglong(list_entity + (120) * (entity_controller_pawn & 0x1FF))
         if entity_pawn == 0:
             continue
+
         player_team = pm.read_int(entity_pawn + m_iTeamNum)
         my_team = pm.read_int(player + m_iTeamNum)
         # check only for enemy
@@ -65,6 +66,7 @@ def trigger():
                     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
                     time.sleep(random.uniform(0.01,0.03))
                     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+        time.sleep(0.001)
 def checkDefuse():
     # check if bomb is planted
     planted = pm.read_bool(client + dwPlantedC4 - 0x8)
@@ -97,6 +99,7 @@ def checkDefuse():
                     beep(350, 150)
                 if(isDefusing and hasKit == False):
                     beep(250,300)
+        time.sleep(0.001)
 def healthCheck():
     time.sleep(0.2)
     # entityList
@@ -125,6 +128,7 @@ def healthCheck():
         if(player_health > 0):
             print("------------------------")
             print("Health: ", player_health)
+        time.sleep(0.001)
 def menu():
     print("SAFECOCK LOADED - WELCOME")
     print("TO CLOSE PRESS F4")
