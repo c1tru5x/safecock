@@ -30,11 +30,20 @@ m_bHasDefuser = client_data["CCSPlayer_ItemServices"]["data"]["m_bHasDefuser"]["
 m_iHealth = client_data["C_BaseEntity"]["data"]["m_iHealth"]["value"]
 dwPlantedC4 = offs_data["client_dll"]["data"]["dwPlantedC4"]["value"]
 m_nBombSite = client_data["C_PlantedC4"]["data"]["m_nBombSite"]["value"]
+m_fFlags = client_data["C_BaseEntity"]["data"]["m_fFlags"]["value"]
 
 #### start code
 pm = pymem.Pymem("cs2.exe")
 client = pymem.process.module_from_name(pm.process_handle, "client.dll").lpBaseOfDll
 player = pm.read_longlong(client + dwLocalPlayerPawn)
+
+#bhop timings
+millis = (1/1000)
+micros = millis * (1/1000)
+
+#keys
+rightArrow = 0x27
+
 def beep(frequency, duration):
     win32api.Beep(frequency, duration)
 def trigger():
@@ -129,15 +138,33 @@ def healthCheck():
             print("------------------------")
             print("Health: ", player_health)
         time.sleep(0.001)
+
+def bhop():
+    time.sleep(millis)
+    if keyboard.is_pressed("space"):
+        pFlag = pm.read_int(player + m_fFlags)
+        bOnGround = pFlag & 1
+        if bOnGround == 1:
+            #sleep 15 ms
+            time.sleep(15625*micros)
+            #sendJump
+            win32api.keybd_event(rightArrow, 0, 0, 0)  # Press the right arrow key
+            time.sleep(0.1)  # Optional: Add a small delay to simulate key press
+            win32api.keybd_event(rightArrow, 0, win32con.KEYEVENTF_KEYUP, 0)  # Release the right arrow key
+
 def menu():
     print("SAFECOCK LOADED - WELCOME")
     print("TO CLOSE PRESS F4")
+    print("For BHOP unbind SPACE and exec:")
+    #set right arrow key to jump
+    print("alias j ""+jump;-jump"";bind rightarrow j")
 def clear():
     print("\033[H\033[J", end="")
 def main():
     menu()
     while(keyboard.is_pressed("F4")==False):
         checkDefuse()
+        bhop()
         if keyboard.is_pressed("ALT"):
             trigger()
         if keyboard.is_pressed("H"):
