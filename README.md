@@ -1,4 +1,4 @@
-A CS2 READONLY Hack in Python<br />
+A CS2 READONLY Hack in Python with ESP<br />
 <br />
 Functions so far implemented:<br />
 <br />
