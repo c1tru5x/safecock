@@ -44,37 +44,35 @@ playerSize = 12 #number of entities (shrink if mem error)
 class MoveableOverlay(tk.Tk):
     def __init__(self):
         super().__init__()
-
         self.geometry(f"{GetSystemMetrics(0)}x{GetSystemMetrics(1)}+0+0")
         self.overrideredirect(True)
         self.attributes('-topmost', True)
         self.attributes('-transparentcolor', 'black')
         self.overrideredirect(True)
-
-        self.canvas = tk.Canvas(self, bg='black', highlightthickness=0)
+        self.canvas = tk.Canvas(self, bg='black', highlightthickness=0,takefocus=False)
         self.canvas.pack(fill=tk.BOTH, expand=True)
-        self.canvas.bind("<Button-1>", self.on_canvas_click) #dont loose focus on click of drawn objects
-
+        self.bind_all("<Button-1>", self.on_canvas_click)
         self.snap_line = None
         self.text_id = None
-
         # Start the periodic update
         self.update_canvas()
-
         # Bind to window resize events
         self.old_window_proc = win32gui.SetWindowLong(self.winfo_id(), win32con.GWL_WNDPROC, self.on_size)
-
         # Bind to the Destroy event
         self.bind("<Destroy>", self.on_destroy)
-    def on_canvas_click(self, event):
-        # Release the grab to allow click-through
-        self.grab_release()
 
     def on_canvas_click(self, event):
-        # Check if the click occurred within the region occupied by the drawn elements
-        x, y = event.x, event.y
-        if self.canvas.find_overlapping(x, y, x, y):
-            # Click occurred on the drawn elements, ignore it
+            # Check if the click occurred within the region occupied by the drawn elements
+            x, y = event.x, event.y
+            if self.canvas.find_overlapping(x, y, x, y):
+                # release if clicked on overlay so it doesnt hang
+                win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+                # Simulate a click at the calculated position to get focus back
+                win32api.SetCursorPos((x - 50, y - 2000))
+                time.sleep(0.08)
+                win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+                time.sleep(random.uniform(0.01, 0.03))
+                win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
             return "break"
 
     def draw_canvas(self, enemy_coordinates):
@@ -115,7 +113,7 @@ class MoveableOverlay(tk.Tk):
         self.draw_canvas(enemy_positions)
         # Draw HUD text with multiple lines
         lines = [
-            "--safec0ck-- v1.4 by c1tru5x"
+            "--safec0ck-- v1.5 by c1tru5x"
         ]
         self.draw_hud_text(lines)
         self.after(50, self.update_canvas)
