@@ -1,6 +1,6 @@
 A CS2 READONLY Hack in Python with ESP<br />
 <br />
-Thanks for the Offsets from: https://github.com/a2x/cs2-dumper
+Thanks for the Offsets from: https://github.com/a2x/cs2-dumper<br />
 Functions so far implemented:<br />
 <br />
 Triggerbot [ALT] <br />
