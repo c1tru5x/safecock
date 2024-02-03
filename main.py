@@ -11,11 +11,11 @@ import keyboard
 from numpy import random
 import threading
 
-json_file_path_client = r"C:\Users\c1tru5x\Downloads\cs2-dumper\generated\client.dll.json"
+json_file_path_client = r"C:\Program Files (x86)\cs2-dumper\generated\client.dll.json"
 with open(json_file_path_client, 'r') as json_file:
     client_data = json.load(json_file)
 
-json_file_path_offsets = r"C:\Users\c1tru5x\Downloads\cs2-dumper\generated\offsets.json"
+json_file_path_offsets = r"C:\Program Files (x86)\cs2-dumper\generated\offsets.json"
 with open(json_file_path_offsets, 'r') as json_file:
     offs_data = json.load(json_file)
 
@@ -28,12 +28,10 @@ m_bIsDefusing = client_data["C_CSPlayerPawnBase"]["data"]["m_bIsDefusing"]["valu
 m_bHasDefuser = client_data["CCSPlayer_ItemServices"]["data"]["m_bHasDefuser"]["value"]
 m_iHealth = client_data["C_BaseEntity"]["data"]["m_iHealth"]["value"]
 dwPlantedC4 = offs_data["client_dll"]["data"]["dwPlantedC4"]["value"]
-m_nBombSite = client_data["C_PlantedC4"]["data"]["m_nBombSite"]["value"]
 dwViewMatrix = offs_data["client_dll"]["data"]["dwViewMatrix"]["value"]
 m_vOldOrigin = client_data["C_BasePlayerPawn"]["data"]["m_vOldOrigin"]["value"]
 m_bDormant = client_data["CGameSceneNode"]["data"]["m_bDormant"]["value"]
 
-lock = threading.Lock
 pm = pymem.Pymem("cs2.exe")
 client = pymem.process.module_from_name(pm.process_handle, "client.dll").lpBaseOfDll
 
@@ -41,13 +39,11 @@ player = pm.read_longlong(client + dwLocalPlayerPawn)
 while player is None:  # check for team switch, for example
     player = pm.read_longlong(client + dwLocalPlayerPawn)
 
-playerSize = 16 #number of entities (shrink if mem error)
+playerSize = 12 #number of entities (shrink if mem error)
 
 class MoveableOverlay(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.crosshair_radius_cm = 7  # Desired crosshair radius in centimeters
-        self.crosshair_length = int(self.crosshair_radius_cm * 2)  # Set line length to twice the desired radius
 
         self.geometry(f"{GetSystemMetrics(0)}x{GetSystemMetrics(1)}+0+0")
         self.overrideredirect(True)
@@ -59,13 +55,11 @@ class MoveableOverlay(tk.Tk):
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.canvas.bind("<Button-1>", self.on_canvas_click) #dont loose focus on click of drawn objects
 
-        self.crosshair_h = None
-        self.crosshair_v = None
         self.snap_line = None
         self.text_id = None
 
         # Start the periodic update
-        self.update_crosshair()
+        self.update_canvas()
 
         # Bind to window resize events
         self.old_window_proc = win32gui.SetWindowLong(self.winfo_id(), win32con.GWL_WNDPROC, self.on_size)
@@ -83,7 +77,7 @@ class MoveableOverlay(tk.Tk):
             # Click occurred on the drawn elements, ignore it
             return "break"
 
-    def draw_crosshair(self, enemy_coordinates):
+    def draw_canvas(self, enemy_coordinates):
         for x, y, z, player_health in enemy_coordinates:
             if z < 0.01: #no div 0 error
                 return
@@ -113,24 +107,24 @@ class MoveableOverlay(tk.Tk):
         text = "\n".join(lines)
         self.text_id = self.canvas.create_text(screen_width - 300, screen_height - 20, text=text, font=("sans-serif", 8, "bold"),
                                               fill="#ffff00")
-    def update_crosshair(self):
+    def update_canvas(self):
         self.canvas.delete("all")  # Clear all drawings
         # Get enemy coordinates and player health
         enemy_positions = do_esp()
         # Draw crosshair, snap line, HUD text and Health for each enemy
-        self.draw_crosshair(enemy_positions)
+        self.draw_canvas(enemy_positions)
         # Draw HUD text with multiple lines
         lines = [
-            "--safec0ck-- v1.3 by c1tru5x"
+            "--safec0ck-- v1.4 by c1tru5x"
         ]
         self.draw_hud_text(lines)
-        self.after(50, self.update_crosshair)
+        self.after(50, self.update_canvas)
 
     def on_size(self, hwnd, msg, wparam, lparam):
         if msg == win32con.WM_SIZE:
-            self.update_crosshair()
+            self.update_canvas()
         return win32gui.CallWindowProc(self.old_window_proc, hwnd, msg, wparam, lparam)
-    
+
     def on_destroy(self, event):
         print("Application is closing. Clean up resources here.")
 
@@ -214,6 +208,7 @@ def checkDefuse():# check if bomb is planted
                         if(isDefusing and hasKit == False):
                             beep(250, 150)
                 time.sleep(0.01)
+
 def trigger():
             entityID = pm.read_int(player + m_iIDEntIndex)
             my_team = pm.read_int(player + m_iTeamNum)
